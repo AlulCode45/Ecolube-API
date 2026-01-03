@@ -14,7 +14,9 @@ use App\Repositories\AboutSectionRepository;
 use App\Repositories\FeatureRepository;
 use App\Repositories\TeamMemberRepository;
 use App\Repositories\FaqRepository;
-use App\Repositories\PartnerRepository;
+use App\Repositories\BrandRepository;
+use App\Repositories\ProductRepository;
+use App\Repositories\PromotionRepository;
 
 // Models
 use App\Models\HeroSection;
@@ -26,7 +28,9 @@ use App\Models\AboutSection;
 use App\Models\Feature;
 use App\Models\TeamMember;
 use App\Models\Faq;
-use App\Models\Partner;
+use App\Models\Brand;
+use App\Models\Product;
+use App\Models\Promotion;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -69,8 +73,16 @@ class RepositoryServiceProvider extends ServiceProvider
             return new FaqRepository(new Faq());
         });
 
-        $this->app->bind(PartnerRepository::class, function ($app) {
-            return new PartnerRepository(new Partner());
+        $this->app->bind(BrandRepository::class, function ($app) {
+            return new BrandRepository(new Brand());
+        });
+
+        $this->app->bind(ProductRepository::class, function ($app) {
+            return new ProductRepository(new Product());
+        });
+
+        $this->app->bind(PromotionRepository::class, function ($app) {
+            return new PromotionRepository(new Promotion());
         });
     }
 

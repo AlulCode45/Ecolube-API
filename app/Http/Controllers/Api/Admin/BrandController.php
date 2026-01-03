@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\BaseApiController;
-use App\Repositories\PartnerRepository;
+use App\Repositories\BrandRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
-class PartnerController extends BaseApiController
+class BrandController extends BaseApiController
 {
     protected $repository;
 
-    public function __construct(PartnerRepository $repository)
+    public function __construct(BrandRepository $repository)
     {
         $this->repository = $repository;
     }
@@ -32,6 +32,8 @@ class PartnerController extends BaseApiController
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'required|in:oil,parts,tire,battery,chemical',
             'logo' => 'required|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             'website' => 'nullable|url|max:255',
             'order' => 'nullable|integer',
@@ -46,11 +48,11 @@ class PartnerController extends BaseApiController
             $data = $request->all();
 
             if ($request->hasFile('logo')) {
-                $data['logo'] = $request->file('logo')->store('partners', 'public');
+                $data['logo'] = $request->file('logo')->store('brands', 'public');
             }
 
-            $partner = $this->repository->create($data);
-            return $this->createdResponse($partner, 'Partner created successfully');
+            $brand = $this->repository->create($data);
+            return $this->createdResponse($brand, 'Brand created successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }
@@ -70,6 +72,8 @@ class PartnerController extends BaseApiController
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'sometimes|required|in:oil,parts,tire,battery,chemical',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             'website' => 'nullable|url|max:255',
             'order' => 'nullable|integer',
@@ -81,18 +85,18 @@ class PartnerController extends BaseApiController
         }
 
         try {
-            $partner = $this->repository->find($id);
+            $brand = $this->repository->find($id);
             $data = $request->all();
 
             if ($request->hasFile('logo')) {
-                if ($partner->logo) {
-                    Storage::disk('public')->delete($partner->logo);
+                if ($brand->logo) {
+                    Storage::disk('public')->delete($brand->logo);
                 }
-                $data['logo'] = $request->file('logo')->store('partners', 'public');
+                $data['logo'] = $request->file('logo')->store('brands', 'public');
             }
 
             $updated = $this->repository->update($id, $data);
-            return $this->successResponse($updated, 'Partner updated successfully');
+            return $this->successResponse($updated, 'Brand updated successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }
@@ -101,14 +105,14 @@ class PartnerController extends BaseApiController
     public function destroy($id)
     {
         try {
-            $partner = $this->repository->find($id);
+            $brand = $this->repository->find($id);
 
-            if ($partner->logo) {
-                Storage::disk('public')->delete($partner->logo);
+            if ($brand->logo) {
+                Storage::disk('public')->delete($brand->logo);
             }
 
             $this->repository->delete($id);
-            return $this->successResponse(null, 'Partner deleted successfully');
+            return $this->successResponse(null, 'Brand deleted successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }
@@ -118,7 +122,7 @@ class PartnerController extends BaseApiController
     {
         $validator = Validator::make($request->all(), [
             'order' => 'required|array',
-            'order.*' => 'required|integer|exists:partners,id',
+            'order.*' => 'required|integer|exists:brands,id',
         ]);
 
         if ($validator->fails()) {
@@ -127,7 +131,17 @@ class PartnerController extends BaseApiController
 
         try {
             $this->repository->reorder($request->order);
-            return $this->successResponse(null, 'Partners reordered successfully');
+            return $this->successResponse(null, 'Brands reordered successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function types()
+    {
+        try {
+            $types = $this->repository->getTypes();
+            return $this->successResponse($types);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }

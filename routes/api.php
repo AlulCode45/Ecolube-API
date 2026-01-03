@@ -11,6 +11,10 @@ Route::prefix('public')->group(function () {
     Route::get('/landing', [LandingPageController::class, 'index']);
     Route::get('/hero-sections', [LandingPageController::class, 'heroSections']);
     Route::get('/services', [LandingPageController::class, 'services']);
+    Route::get('/products', [LandingPageController::class, 'products']);
+    Route::get('/products/{id}', [LandingPageController::class, 'productDetail']);
+    Route::get('/promotions', [LandingPageController::class, 'promotions']);
+    Route::get('/brands', [LandingPageController::class, 'brands']);
     Route::get('/testimonials', [LandingPageController::class, 'testimonials']);
     Route::get('/gallery', [LandingPageController::class, 'gallery']);
     Route::get('/blogs', [LandingPageController::class, 'blogs']);
@@ -48,9 +52,19 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('faqs', \App\Http\Controllers\Api\Admin\FaqController::class);
     Route::post('faqs/reorder', [\App\Http\Controllers\Api\Admin\FaqController::class, 'reorder']);
 
-    // Partners
-    Route::apiResource('partners', \App\Http\Controllers\Api\Admin\PartnerController::class);
-    Route::post('partners/reorder', [\App\Http\Controllers\Api\Admin\PartnerController::class, 'reorder']);
+    // Partners (Brands)
+    Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class);
+    Route::post('brands/reorder', [\App\Http\Controllers\Api\Admin\BrandController::class, 'reorder']);
+    Route::get('brands/types/list', [\App\Http\Controllers\Api\Admin\BrandController::class, 'types']);
+
+    // Products
+    Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
+    Route::post('products/reorder', [\App\Http\Controllers\Api\Admin\ProductController::class, 'reorder']);
+    Route::get('products/categories/list', [\App\Http\Controllers\Api\Admin\ProductController::class, 'categories']);
+
+    // Promotions
+    Route::apiResource('promotions', \App\Http\Controllers\Api\Admin\PromotionController::class);
+    Route::post('promotions/reorder', [\App\Http\Controllers\Api\Admin\PromotionController::class, 'reorder']);
 
     // Features
     Route::apiResource('features', \App\Http\Controllers\Api\Admin\FeatureController::class);

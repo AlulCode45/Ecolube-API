@@ -8,6 +8,9 @@ use App\Services\ServiceService;
 use App\Services\BlogPostService;
 use App\Repositories\TestimonialRepository;
 use App\Repositories\GalleryRepository;
+use App\Repositories\ProductRepository;
+use App\Repositories\PromotionRepository;
+use App\Repositories\BrandRepository;
 use App\Models\ContactInfo;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
@@ -19,19 +22,28 @@ class LandingPageController extends BaseApiController
     protected $blogService;
     protected $testimonialRepo;
     protected $galleryRepo;
+    protected $productRepo;
+    protected $promotionRepo;
+    protected $brandRepo;
 
     public function __construct(
         HeroSectionService $heroService,
         ServiceService $serviceService,
         BlogPostService $blogService,
         TestimonialRepository $testimonialRepo,
-        GalleryRepository $galleryRepo
+        GalleryRepository $galleryRepo,
+        ProductRepository $productRepo,
+        PromotionRepository $promotionRepo,
+        BrandRepository $brandRepo
     ) {
         $this->heroService = $heroService;
         $this->serviceService = $serviceService;
         $this->blogService = $blogService;
         $this->testimonialRepo = $testimonialRepo;
         $this->galleryRepo = $galleryRepo;
+        $this->productRepo = $productRepo;
+        $this->promotionRepo = $promotionRepo;
+        $this->brandRepo = $brandRepo;
     }
 
     public function index()
@@ -40,6 +52,9 @@ class LandingPageController extends BaseApiController
             $data = [
                 'hero_sections' => $this->heroService->getActive(),
                 'services' => $this->serviceService->getActive(),
+                'featured_products' => $this->productRepo->getFeatured(),
+                'active_promotions' => $this->promotionRepo->getActive(),
+                'brands' => $this->brandRepo->getActive(),
                 'testimonials' => $this->testimonialRepo->getActive(),
                 'gallery' => $this->galleryRepo->getActive()->take(6),
                 'latest_posts' => $this->blogService->getPublished(3),
@@ -133,6 +148,65 @@ class LandingPageController extends BaseApiController
     {
         try {
             $data = ContactInfo::first();
+            return $this->successResponse($data);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function products(Request $request)
+    {
+        try {
+            $perPage = $request->get('per_page', 12);
+            $category = $request->get('category');
+            $search = $request->get('search');
+            $featured = $request->get('featured');
+
+            if ($featured) {
+                $data = $this->productRepo->getFeatured();
+            } elseif ($search) {
+                $data = $this->productRepo->search($search);
+            } elseif ($category) {
+                $data = $this->productRepo->getByCategory($category);
+            } else {
+                $data = $this->productRepo->getActive();
+            }
+
+            return $this->successResponse($data);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function productDetail($id)
+    {
+        try {
+            $product = $this->productRepo->find($id);
+            return $this->successResponse($product);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 404);
+        }
+    }
+
+    public function promotions()
+    {
+        try {
+            $data = $this->promotionRepo->getActive();
+            return $this->successResponse($data);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function brands(Request $request)
+    {
+        try {
+            $type = $request->get('type');
+
+            $data = $type
+                ? $this->brandRepo->getByType($type)
+                : $this->brandRepo->getActive();
+
             return $this->successResponse($data);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
